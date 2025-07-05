@@ -7,14 +7,16 @@ import ResultsDisplay from './components/ResultsDisplay';
 
 // Hook and Data Imports
 import useScript from './hooks/useScript';
-import { DEFAULT_ENABLED_RULES } from './data/defaults';
+import { STYLELINT_RULES, DEFAULT_STYLELINT_RULES } from './data/defaults';
 
 /**
- * App: The main application component.
+ * App: The main application component, now powered by a working Stylelint browser bundle.
  */
 export default function App() {
-  const isLinterLoaded = useScript('https://cdnjs.cloudflare.com/ajax/libs/csslint/1.0.5/csslint.min.js');
-  const [css, setCss] = useState(`/* Welcome to the CSS Linter! */\n\nbody {\n    font-family: Arial, sans-serif;\n    color: #333;\n    z-index: 1000; \n}\n\n.important-notice {\n    color: red !important; /* Using !important is often discouraged. */\n}\n\n.box {\n    width: 100px;\n    height: 100px;\n    border: 1px solid #000;\n    padding: 10px;\n    float: left; /* Floats can be tricky. */\n}\n\n#myUniqueId {\n    margin: 10px;\n}\n`);
+  // Correct, working CDN URL for a Stylelint browser bundle
+  const isLinterLoaded = useScript('https://cdn.jsdelivr.net/npm/stylelint-bundle@14.9.1-fixup/dist/stylelint-bundle.js');
+  
+  const [css, setCss] = useState(`/* Welcome to the Stylelint Linter! */\n\nbody {\n    font-family: Arial, sans-serif;\n    color: #333;\n    z-index: 1000; \n}\n\n.important-notice {\n    color: red !important; /* Stylelint can flag this! */\n}\n\na {\n  color: #ff3300;\n}\n\n#myUniqueId {\n    margin: 10px;\n}\n`);
   const [results, setResults] = useState([]);
   const [hasLinted, setHasLinted] = useState(false);
   const [allRules, setAllRules] = useState([]);
@@ -22,37 +24,61 @@ export default function App() {
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false); // Unified readiness state
 
-  // Effect 1: Initialize the linter, and set the initial enabled state for default rules.
+  // Effect 1: Initialize the linter with a static list of rules and set the initial enabled state.
   // This runs only when the linter script has loaded.
   useEffect(() => {
-    if (isLinterLoaded && window.CSSLint) {
-      const availableRules = window.CSSLint.getRules();
-      setAllRules(availableRules);
+    // The browser bundle exposes the linter on `window.stylelint`
+    if (isLinterLoaded && window.stylelint) {
+      setAllRules(STYLELINT_RULES);
       
       // Set the initial state for which rules are enabled
       const initialRules = {};
-      availableRules.forEach(rule => {
-        initialRules[rule.id] = DEFAULT_ENABLED_RULES.includes(rule.id);
+      STYLELINT_RULES.forEach(rule => {
+        initialRules[rule.id] = DEFAULT_STYLELINT_RULES.includes(rule.id);
       });
       setEnabledRules(initialRules);
       setIsReady(true); // Signal that all setup is complete.
     }
   }, [isLinterLoaded]);
 
-  // Effect 2: This is now the single source of truth for all linting operations.
+  // Effect 2: This is the single source of truth for all linting operations.
   // It runs whenever the app is ready and either the CSS or the enabled rules change.
   useEffect(() => {
-    if (isReady) {
-        const ruleset = {};
+    if (isReady && window.stylelint) {
+        // Create the configuration for Stylelint
+        const stylelintRules = {};
         for (const ruleId in enabledRules) {
           if (enabledRules[ruleId]) {
-            ruleset[ruleId] = 1; // 1 for warning, 2 for error. We'll use 1 for all.
+            // Use 'true' for simple on/off rules. More complex rules might need specific values.
+            stylelintRules[ruleId] = true;
           }
         }
-        
-        const validation = window.CSSLint.verify(css, ruleset);
-        setResults(validation.messages);
-        setHasLinted(true);
+
+        const config = {
+            code: css,
+            config: {
+                rules: stylelintRules
+            }
+        };
+
+        // Stylelint's lint function is asynchronous
+        window.stylelint.lint(config)
+            .then(resultObject => {
+                // Adapt the Stylelint results to the format expected by ResultsDisplay
+                const formattedResults = resultObject.results[0].warnings.map(w => ({
+                    line: w.line,
+                    message: w.text,
+                    // Ensure the 'rule' object has an 'id' property for compatibility
+                    rule: { id: w.rule }, 
+                    type: w.severity, // 'error' or 'warning'
+                }));
+                setResults(formattedResults);
+                setHasLinted(true);
+            })
+            .catch(err => {
+                // Handle potential errors from the linter itself
+                console.error("Stylelint error:", err);
+            });
     }
   }, [isReady, css, enabledRules]); // Dependency array correctly triggers re-linting
 
@@ -92,8 +118,9 @@ export default function App() {
         </div>
       </main>
       <footer className="text-center py-4 text-sm text-gray-500">
-        <p>Powered by <a href="http://csslint.net/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">CSSLint</a> and React.</p>
+        <p>Powered by <a href="https://stylelint.io/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Stylelint</a> and React.</p>
       </footer>
     </div>
   );
 }
+
