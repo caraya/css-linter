@@ -1,5 +1,5 @@
 import React from 'react';
-import { UploadIcon } from '../assets/icons.jsx';
+import { UploadIcon } from '../assets/Icons.jsx';
 
 /**
  * CodeInput: Renders the textarea for CSS code and the file upload button.
