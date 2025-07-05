@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircleIcon, AlertTriangleIcon, AlertOctagonIcon } from '../assets/icons.jsx';
+import { CheckCircleIcon, AlertTriangleIcon, AlertOctagonIcon } from '../assets/Icons.jsx';
 
 /**
  * ResultsDisplay: Renders the linting results in a table.
