@@ -129,7 +129,7 @@ export default function App() {
     <div className="bg-gray-100 min-h-screen font-sans">
       <header className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold leading-tight text-gray-900">React CSS Linter</h1>
+          <h1 className="text-3xl font-bold leading-tight text-gray-900">CSS Linter</h1>
           <p className="text-gray-600 mt-1">A simple tool to check your CSS for errors and potential problems.</p>
         </div>
       </header>
