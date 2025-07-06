@@ -1,45 +1,34 @@
-// A static list of common Stylelint rules to display in the UI.
-export const STYLELINT_RULES = [
-  { id: 'at-rule-no-unknown', name: 'Disallow unknown at-rules' },
-  { id: 'block-no-empty', name: 'Disallow empty blocks' },
-  { id: 'color-no-invalid-hex', name: 'Disallow invalid hex colors' },
-  { id: 'comment-no-empty', name: 'Disallow empty comments' },
-  { id: 'declaration-block-no-duplicate-properties', name: 'Disallow duplicate properties' },
-  { id: 'declaration-block-no-shorthand-property-overrides', name: 'Disallow shorthand overrides' },
-  { id: 'font-family-no-duplicate-names', name: 'Disallow duplicate font family names' },
-  { id: 'function-no-unknown', name: 'Disallow unknown functions' },
-  { id: 'keyframe-declaration-no-important', name: 'Disallow !important in keyframes' },
-  { id: 'no-descending-specificity', name: 'Disallow descending specificity' },
-  { id: 'no-duplicate-selectors', name: 'Disallow duplicate selectors' },
-  { id: 'no-empty-source', name: 'Disallow empty sources' },
-  { id: 'property-no-unknown', name: 'Disallow unknown properties' },
-  { id: 'selector-pseudo-class-no-unknown', name: 'Disallow unknown pseudo-classes' },
-  { id: 'selector-pseudo-element-no-unknown', name: 'Disallow unknown pseudo-elements' },
-  { id: 'selector-type-no-unknown', name: 'Disallow unknown type selectors' },
-  { id: 'string-no-newline', name: 'Disallow unescaped newlines in strings' },
-  { id: 'unit-no-unknown', name: 'Disallow unknown units' },
-  { id: 'declaration-no-important', name: 'Disallow !important' },
-  { id: 'selector-id-pattern', name: 'Enforce ID pattern (kebab-case)' },
+// Default recommended rules enabled on initial load for CSSLint
+export const DEFAULT_ENABLED_RULES = [
+  "important", "adjoining-classes", "known-properties", "box-sizing",
+  "box-model", "overqualified-elements", "display-property-grouping",
+  "bulletproof-font-face", "compatible-vendor-prefixes", "regex-selectors",
+  "errors", "duplicate-background-images", "duplicate-properties",
+  "empty-rules", "selector-max-approaching", "gradients", "fallback-colors",
+  "font-sizes", "font-faces", "floats", "star-property-hack",
+  "outline-none", "import", "ids", "underscore-hack", "universal-selector",
+  "unqualified-attributes", "zero-units", "shorthand", "text-indent",
+  "unique-headings", "qualified-headings"
 ];
 
-// The default set of Stylelint rules that are enabled on initial load.
-export const DEFAULT_STYLELINT_RULES = [
-  'at-rule-no-unknown',
-  'block-no-empty',
-  'color-no-invalid-hex',
-  'comment-no-empty',
-  'declaration-block-no-duplicate-properties',
-  'declaration-block-no-shorthand-property-overrides',
-  'font-family-no-duplicate-names',
-  'function-no-unknown',
-  'keyframe-declaration-no-important',
-  'no-descending-specificity',
-  'no-duplicate-selectors',
-  'no-empty-source',
-  'property-no-unknown',
-  'selector-pseudo-class-no-unknown',
-  'selector-pseudo-element-no-unknown',
-  'selector-type-no-unknown',
-  'string-no-newline',
-  'unit-no-unknown',
-];
+// Example code for a custom rule (though this functionality is currently removed from App.jsx)
+export const EXAMPLE_CUSTOM_RULE = `{
+    id: 'high-z-index',
+    name: 'Disallow high z-index',
+    desc: 'Warns when z-index is set to a value greater than 99.',
+    init: function(parser, reporter) {
+        const rule = this;
+        parser.addListener('property', function(event) {
+            const propertyName = event.property.text.toLowerCase();
+            const value = event.value;
+            if (propertyName === 'z-index' && value.isInteger && value.text > 99) {
+                reporter.report(
+                    \`High z-index value (\${value.text}). Consider refactoring.\`,
+                    event.line,
+                    event.col,
+                    rule
+                );
+            }
+        });
+    }
+}`;

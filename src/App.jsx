@@ -7,80 +7,54 @@ import ResultsDisplay from './components/ResultsDisplay';
 
 // Hook and Data Imports
 import useScript from './hooks/useScript';
-import { STYLELINT_RULES, DEFAULT_STYLELINT_RULES } from './data/defaults';
+import { DEFAULT_ENABLED_RULES } from './data/defaults';
 
 /**
- * App: The main application component, now powered by a working Stylelint browser bundle.
+ * App: The main application component, reverted to use CSSLint.
  */
 export default function App() {
-  // Correct, working CDN URL for a Stylelint browser bundle
-  const isLinterLoaded = useScript('https://cdn.jsdelivr.net/npm/stylelint-bundle@14.9.1-fixup/dist/stylelint-bundle.js');
+  // Revert to the CSSLint CDN URL
+  const isLinterLoaded = useScript('https://cdnjs.cloudflare.com/ajax/libs/csslint/1.0.5/csslint.min.js');
   
-  const [css, setCss] = useState(`/* Welcome to the Stylelint Linter! */\n\nbody {\n    font-family: Arial, sans-serif;\n    color: #333;\n    z-index: 1000; \n}\n\n.important-notice {\n    color: red !important; /* Stylelint can flag this! */\n}\n\na {\n  color: #ff3300;\n}\n\n#myUniqueId {\n    margin: 10px;\n}\n`);
+  const [css, setCss] = useState(`/* Welcome back to the CSSLint Linter! */\n\nbody {\n    font-family: Arial, sans-serif;\n    color: #333;\n    z-index: 1000; \n}\n\n.important-notice {\n    color: red !important; /* CSSLint can flag this! */\n}\n\n.box {\n    width: 100px;\n    height: 100px;\n    border: 1px solid #000;\n    padding: 10px;\n    float: left; /* Floats can be tricky. */\n}\n\n#myUniqueId {\n    margin: 10px;\n}\n`);
   const [results, setResults] = useState([]);
   const [hasLinted, setHasLinted] = useState(false);
   const [allRules, setAllRules] = useState([]);
   const [enabledRules, setEnabledRules] = useState({});
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
-  const [isReady, setIsReady] = useState(false); // Unified readiness state
+  const [isReady, setIsReady] = useState(false);
 
-  // Effect 1: Initialize the linter with a static list of rules and set the initial enabled state.
-  // This runs only when the linter script has loaded.
+  // Effect 1: Initialize the linter with CSSLint's rules.
   useEffect(() => {
-    // The browser bundle exposes the linter on `window.stylelint`
-    if (isLinterLoaded && window.stylelint) {
-      setAllRules(STYLELINT_RULES);
+    if (isLinterLoaded && window.CSSLint) {
+      const availableRules = window.CSSLint.getRules();
+      setAllRules(availableRules);
       
-      // Set the initial state for which rules are enabled
       const initialRules = {};
-      STYLELINT_RULES.forEach(rule => {
-        initialRules[rule.id] = DEFAULT_STYLELINT_RULES.includes(rule.id);
+      availableRules.forEach(rule => {
+        initialRules[rule.id] = DEFAULT_ENABLED_RULES.includes(rule.id);
       });
       setEnabledRules(initialRules);
-      setIsReady(true); // Signal that all setup is complete.
+      setIsReady(true);
     }
   }, [isLinterLoaded]);
 
-  // Effect 2: This is the single source of truth for all linting operations.
-  // It runs whenever the app is ready and either the CSS or the enabled rules change.
+  // Effect 2: The single source of truth for all linting operations.
   useEffect(() => {
-    if (isReady && window.stylelint) {
-        // Create the configuration for Stylelint
-        const stylelintRules = {};
+    if (isReady) {
+        const ruleset = {};
         for (const ruleId in enabledRules) {
           if (enabledRules[ruleId]) {
-            // Use 'true' for simple on/off rules. More complex rules might need specific values.
-            stylelintRules[ruleId] = true;
+            ruleset[ruleId] = 1; // 1 for warning, 2 for error.
           }
         }
-
-        const config = {
-            code: css,
-            config: {
-                rules: stylelintRules
-            }
-        };
-
-        // Stylelint's lint function is asynchronous
-        window.stylelint.lint(config)
-            .then(resultObject => {
-                // Adapt the Stylelint results to the format expected by ResultsDisplay
-                const formattedResults = resultObject.results[0].warnings.map(w => ({
-                    line: w.line,
-                    message: w.text,
-                    // Ensure the 'rule' object has an 'id' property for compatibility
-                    rule: { id: w.rule }, 
-                    type: w.severity, // 'error' or 'warning'
-                }));
-                setResults(formattedResults);
-                setHasLinted(true);
-            })
-            .catch(err => {
-                // Handle potential errors from the linter itself
-                console.error("Stylelint error:", err);
-            });
+        
+        const validation = window.CSSLint.verify(css, ruleset);
+        // CSSLint's results are already in the correct format for ResultsDisplay
+        setResults(validation.messages);
+        setHasLinted(true);
     }
-  }, [isReady, css, enabledRules]); // Dependency array correctly triggers re-linting
+  }, [isReady, css, enabledRules]);
 
   // Handler for toggling rules in the config panel
   const handleRuleToggle = (ruleId) => {
@@ -110,7 +84,7 @@ export default function App() {
                         isExpanded={isConfigExpanded}
                         setIsExpanded={setIsConfigExpanded}
                     />
-                    <CodeInput css={css} setCss={setCss} onLint={() => { /* Manual lint button is now redundant but kept for UI */ }} />
+                    <CodeInput css={css} setCss={setCss} onLint={() => { /* Manual lint button is redundant */ }} />
                     <ResultsDisplay results={results} hasLinted={hasLinted} />
                 </>
             )}
@@ -118,9 +92,8 @@ export default function App() {
         </div>
       </main>
       <footer className="text-center py-4 text-sm text-gray-500">
-        <p>Powered by <a href="https://stylelint.io/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Stylelint</a> and React.</p>
+        <p>Powered by <a href="http://csslint.net/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">CSSLint</a> and React.</p>
       </footer>
     </div>
   );
 }
-
