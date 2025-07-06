@@ -1,5 +1,5 @@
 import React from 'react';
-import { UploadIcon } from '../assets/Icons.jsx';
+import { UploadIcon } from '../assets/icons';
 
 /**
  * CodeInput: Renders the textarea for CSS code and the file upload button.
@@ -11,6 +11,8 @@ const CodeInput = ({ css, setCss, onLint }) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setCss(e.target.result);
+        // Automatically lint after a file is loaded
+        onLint(); 
       };
       reader.readAsText(file);
     } else if (file) {
@@ -31,6 +33,7 @@ const CodeInput = ({ css, setCss, onLint }) => {
             <textarea
                 value={css}
                 onChange={handleTextChange}
+                onBlur={onLint} // Trigger lint when the text area loses focus
                 placeholder="Paste your CSS code here..."
                 className="w-full h-64 p-3 font-mono text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                 spellCheck="false"
@@ -43,7 +46,7 @@ const CodeInput = ({ css, setCss, onLint }) => {
             </label>
             <input id="file-upload" name="file-upload" type="file" className="sr-only" accept=".css" onChange={handleFileChange} />
              <button
-                onClick={onLint}
+                onClick={onLint} // Trigger lint when the button is clicked
                 className="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
             >
                 Lint CSS
